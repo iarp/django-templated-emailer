@@ -10,9 +10,9 @@ from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.template import Template, Context
 from django.utils import timezone
-from django.conf import settings
+from django.conf import settings as django_settings
 
-from django_templated_emailer import utils
+from . import utils, settings
 
 logger = logging.getLogger('django_templates_emailer')
 
@@ -29,7 +29,6 @@ class BaseEmailFields(models.Model):
     send_after_minutes = models.IntegerField(null=True, blank=True)
 
     subject = models.CharField(max_length=500)
-    body = models.TextField()
 
     attachments = models.TextField(blank=True, help_text='Comma separated list of file paths. '
                                                          'If it is a URL, must be full proper url form.')
@@ -46,6 +45,7 @@ class EmailTemplate(BaseEmailFields):
     admin_list_help = """Emails wrapped in ( ) are conditional Send To type"""
 
     name = models.CharField(max_length=255)
+    body = settings.TEMPLATE_BODY_FIELD_TYPE
 
     send_to_switch_true = models.CharField(max_length=500, blank=True, help_text='Email Address to add to the Send To field when the switch statement is True')
     send_to_switch_false = models.CharField(max_length=500, blank=True, help_text='Email Address to add to the Send To field when the switch statement is False')
@@ -56,7 +56,7 @@ class EmailTemplate(BaseEmailFields):
 
     def save(self, *args, **kwargs):
 
-        if self.pk and self.default:
+        if settings.TEMPLATE_DEFAULT_ALLOW_CHANGING_NAME and self.pk and self.default:
             # Prevent someone changing the Name value which is used by the programming logic to find the template.
             orig_data = self.objects.get(pk=self.pk)
             if self.name != orig_data.name:
@@ -65,8 +65,7 @@ class EmailTemplate(BaseEmailFields):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-
-        if not self.default:
+        if settings.TEMPLATE_DEFAULT_ALLOW_DELETE and not self.default:
             super().delete(*args, **kwargs)
 
     def __str__(self):
@@ -101,6 +100,8 @@ class EmailQueue(BaseEmailFields):
     # What module within django is sending this? Just for tracking purposes.
     template_name = models.CharField(max_length=255, blank=True)
 
+    body = settings.QUEUE_BODY_FIELD_TYPE
+
     # A Way to link the email to a specific item
     model_one_name = models.CharField(max_length=255, blank=True)
     model_one_id = models.CharField(max_length=255, blank=True)
@@ -119,7 +120,8 @@ class EmailQueue(BaseEmailFields):
     @staticmethod
     def prepare_email(template_name=None, attachments=None, send_to=None,
                       send_after_minutes=None, model_one=None, model_two=None, subject=None, body=None,
-                      sent_by=None, reply_to=None, cc_to=None, bcc_to=None, send_to_switch=None, **contexts):
+                      sent_by=None, reply_to=None, cc_to=None, bcc_to=None, send_to_switch=None,
+                      override_template_name=None, override_subject=None, override_body=None, **contexts):
         """ Prepares an EmailQueue object for sending without Saving or Sending it.
 
             Useful when we want to quickly template out an EmailTemplate object for use in a custom form.
@@ -185,6 +187,10 @@ class EmailQueue(BaseEmailFields):
         eq.cc_to = utils.unique_emails(template.cc_to, cc_to, joiner=';')
         eq.bcc_to = utils.unique_emails(template.bcc_to, bcc_to, joiner=';')
 
+        for k in ['model_one_name', 'model_one_id', 'model_two_name', 'model_two_id']:
+            if k in contexts:
+                setattr(eq, k, contexts.pop(k))
+
         if model_one or model_two:
             eq.set_model_data(model_one=model_one, model_two=model_two)
 
@@ -197,10 +203,23 @@ class EmailQueue(BaseEmailFields):
         eq.body = template.body
         eq.subject = template.subject
 
-        if subject and subject.strip():
+        if override_template_name and override_template_name.strip():
+            eq.template_name = override_template_name
+
+        if subject:
             eq.subject = subject
-        if body and body.strip():
+        elif override_subject:
+            eq.subject = override_subject
+
+        if body:
             eq.body = body
+        elif override_body:
+            eq.body = override_body
+
+        if callable(eq.subject):
+            eq.subject = eq.subject(eq, **contexts)
+        if callable(eq.body):
+            eq.body = eq.body(eq, **contexts)
 
         eq.subject = Template(eq.subject).render(context=Context(contexts))
         eq.body = Template(eq.body).render(context=Context(contexts))
@@ -291,7 +310,7 @@ class EmailQueue(BaseEmailFields):
                 if attachment.startswith('http') or attachment.startswith('www'):
 
                     if not temp_folder:
-                        temp_folder = tempfile.mkdtemp(dir=os.path.join(settings.BASE_DIR, 'cache'))
+                        temp_folder = tempfile.mkdtemp(dir=os.path.join(django_settings.BASE_DIR, 'cache'))
 
                     try:
                         url = attachment
@@ -404,14 +423,14 @@ class EmailQueue(BaseEmailFields):
     #     soup = BeautifulSoup(self.body, 'html.parser')
     #     for a in soup.find_all('a', href=True):
     #         links.append(a)
-    #         if settings.STATIC_URL in a['href']:
+    #         if django_settings.STATIC_URL in a['href']:
     #
     #             if folder.replace(' ', '+') not in a['href']:
     #                 continue
     #
     #             try:
     #                 default_storage.delete(
-    #                     a['href'].replace(settings.STATIC_URL, '').replace('+', ' ')
+    #                     a['href'].replace(django_settings.STATIC_URL, '').replace('+', ' ')
     #                 )
     #                 deleted.append(a)
     #             except:

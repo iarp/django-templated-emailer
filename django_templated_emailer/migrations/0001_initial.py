@@ -4,6 +4,10 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 
+# Allow overriding Template and Queue body field types.
+TEMPLATE_BODY_FIELD_TYPE = getattr(settings, 'TEMPLATED_EMAILER_QUEUE_BODY_FIELD_TYPE', models.TextField())
+QUEUE_BODY_FIELD_TYPE = getattr(settings, 'TEMPLATED_EMAILER_TEMPLATE_BODY_FIELD_TYPE', models.TextField())
+
 
 class Migration(migrations.Migration):
 
@@ -24,7 +28,7 @@ class Migration(migrations.Migration):
                 ('bcc_to', models.TextField(blank=True, null=True)),
                 ('send_after_minutes', models.IntegerField(blank=True, null=True)),
                 ('subject', models.CharField(max_length=500)),
-                ('body', models.TextField()),
+                ('body', TEMPLATE_BODY_FIELD_TYPE),
                 ('attachments', models.TextField(blank=True, help_text='Comma separated list of file paths. If it is a URL, must be full proper url form.')),
                 ('inserted', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
@@ -48,7 +52,7 @@ class Migration(migrations.Migration):
                 ('bcc_to', models.TextField(blank=True, null=True)),
                 ('send_after_minutes', models.IntegerField(blank=True, null=True)),
                 ('subject', models.CharField(max_length=500)),
-                ('body', models.TextField()),
+                ('body', QUEUE_BODY_FIELD_TYPE),
                 ('attachments', models.TextField(blank=True, help_text='Comma separated list of file paths. If it is a URL, must be full proper url form.')),
                 ('inserted', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
@@ -60,7 +64,7 @@ class Migration(migrations.Migration):
                 ('sent', models.BooleanField(default=False)),
                 ('date_sent', models.DateTimeField(blank=True, null=True)),
                 ('fake_sent', models.BooleanField(default=False)),
-                ('sent_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                ('sent_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='dte_sent_emails', to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'verbose_name': 'Email Queue',
