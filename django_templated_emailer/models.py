@@ -111,7 +111,7 @@ class EmailQueue(BaseEmailFields):
     date_sent = models.DateTimeField(null=True, blank=True)
     fake_sent = models.BooleanField(default=False)
 
-    sent_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)
+    sent_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True, related_name='dte_sent_emails')
 
     def get_send_to_names(self):
         return '; '.join(e.split('@')[0] for e in self.send_to.split(';')) if self.send_to else ''
