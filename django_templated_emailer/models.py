@@ -14,7 +14,7 @@ from django.conf import settings as django_settings
 
 from . import utils, settings
 
-logger = logging.getLogger('django_templates_emailer')
+logger = logging.getLogger('django_templated_emailer')
 
 
 class BaseEmailFields(models.Model):
@@ -58,7 +58,7 @@ class EmailTemplate(BaseEmailFields):
 
         if settings.TEMPLATE_DEFAULT_ALLOW_CHANGING_NAME and self.pk and self.default:
             # Prevent someone changing the Name value which is used by the programming logic to find the template.
-            orig_data = self.objects.get(pk=self.pk)
+            orig_data = EmailTemplate.objects.get(pk=self.pk)
             if self.name != orig_data.name:
                 self.name = orig_data.name
 
