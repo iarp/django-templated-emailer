@@ -4,9 +4,10 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 
-# Allow overriding Template and Queue body field types.
-TEMPLATE_BODY_FIELD_TYPE = getattr(settings, 'TEMPLATED_EMAILER_QUEUE_BODY_FIELD_TYPE', models.TextField())
-QUEUE_BODY_FIELD_TYPE = getattr(settings, 'TEMPLATED_EMAILER_TEMPLATE_BODY_FIELD_TYPE', models.TextField())
+from ..settings import (
+    TEMPLATE_BODY_FIELD_TYPE, TEMPLATE_BODY_FIELD_PARAMS,
+    QUEUE_BODY_FIELD_PARAMS, QUEUE_BODY_FIELD_TYPE
+)
 
 
 class Migration(migrations.Migration):
@@ -28,7 +29,7 @@ class Migration(migrations.Migration):
                 ('bcc_to', models.TextField(blank=True, null=True)),
                 ('send_after_minutes', models.IntegerField(blank=True, null=True)),
                 ('subject', models.CharField(max_length=500)),
-                ('body', TEMPLATE_BODY_FIELD_TYPE),
+                ('body', TEMPLATE_BODY_FIELD_TYPE(**TEMPLATE_BODY_FIELD_PARAMS)),
                 ('attachments', models.TextField(blank=True, help_text='Comma separated list of file paths. If it is a URL, must be full proper url form.')),
                 ('inserted', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
@@ -52,7 +53,7 @@ class Migration(migrations.Migration):
                 ('bcc_to', models.TextField(blank=True, null=True)),
                 ('send_after_minutes', models.IntegerField(blank=True, null=True)),
                 ('subject', models.CharField(max_length=500)),
-                ('body', QUEUE_BODY_FIELD_TYPE),
+                ('body', QUEUE_BODY_FIELD_TYPE(**QUEUE_BODY_FIELD_PARAMS)),
                 ('attachments', models.TextField(blank=True, help_text='Comma separated list of file paths. If it is a URL, must be full proper url form.')),
                 ('inserted', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),

@@ -45,7 +45,7 @@ class EmailTemplate(BaseEmailFields):
     admin_list_help = """Emails wrapped in ( ) are conditional Send To type"""
 
     name = models.CharField(max_length=255)
-    body = settings.TEMPLATE_BODY_FIELD_TYPE
+    body = settings.TEMPLATE_BODY_FIELD_TYPE(**settings.TEMPLATE_BODY_FIELD_PARAMS)
 
     send_to_switch_true = models.CharField(max_length=500, blank=True, help_text='Email Address to add to the Send To field when the switch statement is True')
     send_to_switch_false = models.CharField(max_length=500, blank=True, help_text='Email Address to add to the Send To field when the switch statement is False')
@@ -100,7 +100,7 @@ class EmailQueue(BaseEmailFields):
     # What module within django is sending this? Just for tracking purposes.
     template_name = models.CharField(max_length=255, blank=True)
 
-    body = settings.QUEUE_BODY_FIELD_TYPE
+    body = settings.QUEUE_BODY_FIELD_TYPE(**settings.QUEUE_BODY_FIELD_PARAMS)
 
     # A Way to link the email to a specific item
     model_one_name = models.CharField(max_length=255, blank=True)
