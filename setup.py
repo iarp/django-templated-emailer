@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='django-templated-emailer',
-    version='0.1',
+    version='0.2',
     description='An Email template and queue system I use in many django projects.',
     url='',
     author='IARP',
