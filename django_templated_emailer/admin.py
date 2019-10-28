@@ -1,6 +1,6 @@
-from django.contrib import admin
-from django.utils import timezone
+from django.contrib import admin, messages
 
+from . import settings
 from .models import EmailTemplate, EmailQueue
 
 
@@ -45,6 +45,16 @@ class EmailTemplateAdmin(admin.ModelAdmin):
 
         return send_to
     send_tos.short_description = 'Send To'
+
+    def delete_model(self, request, obj):
+        if not settings.TEMPLATE_DEFAULT_ALLOW_DELETE and obj.default:
+            messages.error(request, 'Settings disallow deletion of default=True EmailTemplate objects.')
+            return
+        return super().delete_model(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        for obj in queryset.all():
+            self.delete_model(request, obj)
 
 
 def requeue_email_queue(modeladmin, request, queryset):
