@@ -65,8 +65,9 @@ class EmailTemplate(BaseEmailFields):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        if settings.TEMPLATE_DEFAULT_ALLOW_DELETE and not self.default:
-            super().delete(*args, **kwargs)
+        if not settings.TEMPLATE_DEFAULT_ALLOW_DELETE and self.default:
+            return
+        return super().delete(*args, **kwargs)
 
     def __str__(self):
         return self.name
