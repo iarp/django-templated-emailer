@@ -217,6 +217,9 @@ class EmailQueue(BaseEmailFields):
         elif override_body:
             eq.body = override_body
 
+        if settings.GLOBAL_CONTEXTS and isinstance(settings.GLOBAL_CONTEXTS, dict):
+            contexts.update(settings.GLOBAL_CONTEXTS)
+
         if callable(eq.subject):
             eq.subject = eq.subject(eq, **contexts)
         if callable(eq.body):

@@ -42,3 +42,14 @@ TEMPLATE_DEFAULT_ALLOW_CHANGING_NAME = _setting('ALLOW_DEFAULT_CHANGE_NAME', Fal
 
 # Do you want to allow deletion of default templates?
 TEMPLATE_DEFAULT_ALLOW_DELETE = _setting('ALLOW_DEFAULT_DELETE', False)
+
+# Allows projects to inject their own global variables to the context passed into subject and body.
+# for example: {domain} might be your root domain of the site for linking purposes.
+# MUST be of type dict, can be a function as long as it returns dict.
+GLOBAL_CONTEXTS = _setting('GLOBAL_CONTEXTS', {})
+if isinstance(GLOBAL_CONTEXTS, str):
+    GLOBAL_CONTEXTS = import_string(GLOBAL_CONTEXTS)
+if callable(GLOBAL_CONTEXTS):
+    GLOBAL_CONTEXTS = GLOBAL_CONTEXTS()
+if not isinstance(GLOBAL_CONTEXTS, dict):
+    raise AssertionError(f'GLOBAL_CONTEXTS must be of type dict, found {type(GLOBAL_CONTEXTS)}')
