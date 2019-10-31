@@ -4,11 +4,7 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 
-from ..settings import (
-    TEMPLATE_BODY_FIELD_TYPE, TEMPLATE_BODY_FIELD_PARAMS,
-    QUEUE_BODY_FIELD_PARAMS, QUEUE_BODY_FIELD_TYPE
-)
-
+from ..app_settings import app_settings
 
 class Migration(migrations.Migration):
 
@@ -29,7 +25,7 @@ class Migration(migrations.Migration):
                 ('bcc_to', models.TextField(blank=True, null=True)),
                 ('send_after_minutes', models.IntegerField(blank=True, null=True)),
                 ('subject', models.CharField(max_length=500)),
-                ('body', TEMPLATE_BODY_FIELD_TYPE(**TEMPLATE_BODY_FIELD_PARAMS)),
+                ('body', app_settings.TEMPLATE_BODY_FIELD_TYPE(**app_settings.TEMPLATE_BODY_FIELD_PARAMS)),
                 ('attachments', models.TextField(blank=True, help_text='Comma separated list of file paths. If it is a URL, must be full proper url form.')),
                 ('inserted', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),
@@ -53,7 +49,7 @@ class Migration(migrations.Migration):
                 ('bcc_to', models.TextField(blank=True, null=True)),
                 ('send_after_minutes', models.IntegerField(blank=True, null=True)),
                 ('subject', models.CharField(max_length=500)),
-                ('body', QUEUE_BODY_FIELD_TYPE(**QUEUE_BODY_FIELD_PARAMS)),
+                ('body', app_settings.QUEUE_BODY_FIELD_TYPE(**app_settings.QUEUE_BODY_FIELD_PARAMS)),
                 ('attachments', models.TextField(blank=True, help_text='Comma separated list of file paths. If it is a URL, must be full proper url form.')),
                 ('inserted', models.DateTimeField(auto_now_add=True)),
                 ('updated', models.DateTimeField(auto_now=True)),

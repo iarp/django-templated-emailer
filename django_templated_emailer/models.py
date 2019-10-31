@@ -12,7 +12,8 @@ from django.template import Template, Context
 from django.utils import timezone
 from django.conf import settings as django_settings
 
-from . import utils, settings
+from . import utils
+from .app_settings import app_settings
 
 logger = logging.getLogger('django_templated_emailer')
 
@@ -45,7 +46,7 @@ class EmailTemplate(BaseEmailFields):
     admin_list_help = """Emails wrapped in ( ) are conditional Send To type"""
 
     name = models.CharField(max_length=255)
-    body = settings.TEMPLATE_BODY_FIELD_TYPE(**settings.TEMPLATE_BODY_FIELD_PARAMS)
+    body = app_settings.TEMPLATE_BODY_FIELD_TYPE(**app_settings.TEMPLATE_BODY_FIELD_PARAMS)
 
     send_to_switch_true = models.CharField(max_length=500, blank=True, help_text='Email Address to add to the Send To field when the switch statement is True')
     send_to_switch_false = models.CharField(max_length=500, blank=True, help_text='Email Address to add to the Send To field when the switch statement is False')
@@ -56,7 +57,7 @@ class EmailTemplate(BaseEmailFields):
 
     def save(self, *args, **kwargs):
 
-        if settings.TEMPLATE_DEFAULT_ALLOW_CHANGING_NAME and self.pk and self.default:
+        if app_settings.TEMPLATE_DEFAULT_ALLOW_CHANGING_NAME and self.pk and self.default:
             # Prevent someone changing the Name value which is used by the programming logic to find the template.
             orig_data = EmailTemplate.objects.get(pk=self.pk)
             if self.name != orig_data.name:
@@ -65,7 +66,7 @@ class EmailTemplate(BaseEmailFields):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        if not settings.TEMPLATE_DEFAULT_ALLOW_DELETE and self.default:
+        if not app_settings.TEMPLATE_DEFAULT_ALLOW_DELETE and self.default:
             return
         return super().delete(*args, **kwargs)
 
@@ -101,7 +102,7 @@ class EmailQueue(BaseEmailFields):
     # What module within django is sending this? Just for tracking purposes.
     template_name = models.CharField(max_length=255, blank=True)
 
-    body = settings.QUEUE_BODY_FIELD_TYPE(**settings.QUEUE_BODY_FIELD_PARAMS)
+    body = app_settings.QUEUE_BODY_FIELD_TYPE(**app_settings.QUEUE_BODY_FIELD_PARAMS)
 
     # A Way to link the email to a specific item
     model_one_name = models.CharField(max_length=255, blank=True)
@@ -217,16 +218,16 @@ class EmailQueue(BaseEmailFields):
         elif override_body:
             eq.body = override_body
 
-        if settings.GLOBAL_CONTEXTS and isinstance(settings.GLOBAL_CONTEXTS, dict):
-            contexts.update(settings.GLOBAL_CONTEXTS)
+        combined_contexts = app_settings.GLOBAL_CONTEXTS.copy()
+        combined_contexts.update(contexts)
 
         if callable(eq.subject):
-            eq.subject = eq.subject(eq, **contexts)
+            eq.subject = eq.subject(eq, **combined_contexts)
         if callable(eq.body):
-            eq.body = eq.body(eq, **contexts)
+            eq.body = eq.body(eq, **combined_contexts)
 
-        eq.subject = Template(eq.subject).render(context=Context(contexts))
-        eq.body = Template(eq.body).render(context=Context(contexts))
+        eq.subject = Template(eq.subject).render(context=Context(combined_contexts))
+        eq.body = Template(eq.body).render(context=Context(combined_contexts))
 
         return eq
 

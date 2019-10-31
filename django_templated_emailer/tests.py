@@ -1,6 +1,8 @@
 from django.test import TestCase
+from django.test.utils import override_settings
 
 from .utils import unique_emails
+from .models import EmailQueue, EmailTemplate
 
 
 class TestUtils(TestCase):
@@ -50,3 +52,55 @@ class TestUtils(TestCase):
 
         ue = unique_emails(self.emails, {'fails': 'test@domain.com'})
         self.assertEqual(3, len(ue))
+
+
+class TestEmailQueueQueueEmail(TestCase):
+
+    def setUp(self) -> None:
+        self.template = EmailTemplate.objects.create(
+            name='Test Template',
+            subject='Test',
+            body='Test Body! {{domain}}'
+        )
+
+    def test_no_context(self):
+        eq = EmailQueue.queue_email(
+            template_name='Test Template',
+            send_to='test@domain.com',
+        )
+        self.assertEqual('Test', eq.subject)
+        self.assertEqual('Test Body! ', eq.body)
+
+    def test_with_context(self):
+        eq = EmailQueue.queue_email(
+            template_name='Test Template',
+            send_to='test@domain.com',
+
+            domain='here as context'
+        )
+        self.assertEqual('Test', eq.subject)
+        self.assertEqual('Test Body! here as context', eq.body)
+
+    @override_settings(
+        TEMPLATED_EMAILER_GLOBAL_CONTEXTS={'domain': 'here in global context'}
+    )
+    def test_with_global_context(self):
+        eq = EmailQueue.queue_email(
+            template_name='Test Template',
+            send_to='test@domain.com',
+        )
+        self.assertEqual('Test', eq.subject)
+        self.assertEqual('Test Body! here in global context', eq.body)
+
+    @override_settings(
+        TEMPLATED_EMAILER_GLOBAL_CONTEXTS={'domain': 'here in global context'}
+    )
+    def test_global_context_does_not_overwrite_local_context(self):
+        eq = EmailQueue.queue_email(
+            template_name='Test Template',
+            send_to='test@domain.com',
+
+            domain='test here in method'
+        )
+        self.assertEqual('Test', eq.subject)
+        self.assertEqual('Test Body! test here in method', eq.body)

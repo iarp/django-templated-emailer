@@ -1,6 +1,6 @@
 from django.contrib import admin, messages
 
-from . import settings
+from .app_settings import app_settings
 from .models import EmailTemplate, EmailQueue
 
 
@@ -47,7 +47,7 @@ class EmailTemplateAdmin(admin.ModelAdmin):
     send_tos.short_description = 'Send To'
 
     def delete_model(self, request, obj):
-        if not settings.TEMPLATE_DEFAULT_ALLOW_DELETE and obj.default:
+        if not app_settings.TEMPLATE_DEFAULT_ALLOW_DELETE and obj.default:
             messages.error(request, 'Settings disallow deletion of default=True EmailTemplate objects.')
             return
         return super().delete_model(request, obj)
