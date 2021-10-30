@@ -1,6 +1,5 @@
 import re
-import urllib.request
-import shutil
+import requests
 
 
 def unique_emails(*args, joiner=None):
@@ -48,6 +47,6 @@ def unique_emails(*args, joiner=None):
     return ueq
 
 
-def download_file(url, filename):
-    with urllib.request.urlopen(url) as response, open(filename, 'wb') as out_file:
-        shutil.copyfileobj(response, out_file)
+def download_file(url, filename, write_mode='wb', **kwargs):
+    with requests.get(url) as response, open(filename, write_mode, **kwargs) as out_file:
+        out_file.write(response.content)
