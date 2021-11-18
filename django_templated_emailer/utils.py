@@ -49,4 +49,5 @@ def unique_emails(*args, joiner=None):
 
 def download_file(url, filename, write_mode='wb', **kwargs):
     with requests.get(url) as response, open(filename, write_mode, **kwargs) as out_file:
-        out_file.write(response.content)
+        if response.status_code == 200:
+            out_file.write(response.content)
