@@ -13,28 +13,10 @@ class AppSettings(object):
         from django.conf import settings
         return getattr(settings, self.prefix + name, default)
 
-    def _project_name(self):
-        from django.conf import settings
-        tmp = settings.SETTINGS_MODULE.split('.')
-        if len(tmp) == 1:
-            return tmp[0]
-        return '.'.join(tmp[:-1])
-
     @property
     def CELERY_IGNORE_RESULT(self):
         # Whether or not to log the result of the sender task
         return self._setting('CELERY_TASK_SENDER_IGNORE_RESULT', False)
-
-    @property
-    def CELERY_APP_IMPORT_PATH(self):
-        return self._setting('CELERY_APP', f'{self._project_name()}.celery.app')
-
-    @property
-    def PROJECT_CELERY_APP(self):
-        try:
-            return import_string(self.CELERY_APP_IMPORT_PATH)
-        except ImportError:
-            return None
 
     @property
     def BODY_FIELD_TYPE(self):

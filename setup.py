@@ -9,6 +9,6 @@ setup(
     author_email='iarp.opensource@gmail.com',
     license='MIT',
     packages=find_packages(),
-    install_requires=["django>=1.11", "requests"],
+    install_requires=["django>=1.11", "requests", "celery"],
     zip_safe=False
 )
