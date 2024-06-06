@@ -143,6 +143,9 @@ class EmailQueue(BaseEmailFields):
             bcc_to: Email addresses to bcc to, can be a delimited list
             send_to_switch: Some emails send to 1 person if a switch is true or a
                             2nd person if false, supply the switch result here.
+            override_template_name: Changes the template_name value saved to the database
+            override_subject: Force the subject to this value instead of what is set in the template
+            override_body: Force the body to this value instead of what is set in the template
             **contexts: All keyword items to add to the EmailTemplate subject and body rendering.
 
         Returns:
